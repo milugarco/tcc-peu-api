@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(uuid())
+  username     String     @unique
+  email        String     @unique
+  password     String
+  profilePhoto String     @map("profile_photo")
+  bannerPhoto  String     @map("banner_photo")
+  age          Int
+  gender       UserGenrer
+  about        String
+  type         UserType
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
+
+  comicRating   ComicRating[]
+  comicComments ComicComment[]
+
+  @@map("users")
+}
+
+model Comic {
+  id          String    @id @default(uuid())
+  title       String    @unique
+  sinopse     String
+  coverPhoto  String    @map("cover_photo")
+  bannerPhoto String    @map("banner_photo")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  comicPages   ComicPage[]
+  comicRating  ComicRating[]
+  ComicComment ComicComment[]
+
+  @@map("comics")
+}
+
+model ComicPage {
+  id         Int    @id @default(autoincrement())
+  comicId    String @map("comic_id")
+  pagePhoto  String @map("page_photo")
+  pageNumber Int
+
+  comic Comic @relation(fields: [comicId], references: [id])
+
+  @@map("comic_pages")
+}
+
+model ComicRating {
+  id      Int    @id @default(autoincrement())
+  userId  String @map("user_id")
+  comicId String @map("comic_id")
+  rating  Int
+
+  comic Comic @relation(fields: [comicId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("comic_rating")
+}
+
+model ComicComment {
+  id      Int    @id @default(autoincrement())
+  comicId String @map("comic_id")
+  userId  String @map("user_id")
+  comment String
+
+  comic Comic @relation(fields: [comicId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("comic_comments")
+}
+
+enum UserGenrer {
+  MALE
+  FEMALE
+  UNDEFINED
+}
+
+enum UserType {
+  ADMIN
+  VISITANT
+}
